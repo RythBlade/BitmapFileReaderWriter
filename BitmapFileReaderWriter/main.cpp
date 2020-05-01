@@ -39,7 +39,7 @@ public:
         return fileTypeSize + imageInfoSize;
     }
 
-    void writeTestBitmap(int totalImageWidth, int totalImageHeight)
+    void writeTestBitmap(char const* const filaname, int totalImageWidth, int totalImageHeight)
     {
         // written using:
         // https://itnext.io/bits-to-bitmaps-a-simple-walkthrough-of-bmp-image-format-765dc6857393
@@ -53,7 +53,7 @@ public:
         // MUST OPEN THE FILE IN BINARY MODE!!! IF WE DONE AND WE EVER WRITE A '\n' CHARACTER, IT WILL NORMALISE THE LINE ENDING WITH A CARRAIGE RETURN TOO - WRITING 2 BYTES, RATHER THAN 1
         // As we're writing individual bytes for the colours, if any of then are 10u (the '\n' character), an extra character will be added. Also - the return value doesn't return that 2 characters
         // were written either!!! It returns 1. You can only find this using ftell, to check the file position for instances where it skips forward too many bytes on a write.
-        errno_t errNum = fopen_s( &file, "test.bmp", "wb"); 
+        errno_t errNum = fopen_s( &file, filaname, "wb");
 
         if (file && errNum == 0)
         {
@@ -215,7 +215,10 @@ int main()
     printf("Hello world!\n");
 
     Bitmap myBitmap;
-    myBitmap.writeTestBitmap(200, 20);
+    myBitmap.writeTestBitmap("test.bmp", 200, 20);
+    myBitmap.writeTestBitmap("test1.bmp", 201, 21);
+    myBitmap.writeTestBitmap("test2.bmp", 800, 800);
+    myBitmap.writeTestBitmap("test3.bmp", 803, 803);
 
     system("mspaint.exe test.bmp");
 
