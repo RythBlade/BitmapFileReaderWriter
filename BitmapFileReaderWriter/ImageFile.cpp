@@ -111,7 +111,6 @@ namespace Bitmap
     void ImageFile::writeTestColourData(FILE& file, int totalImageHeight, int totalImageWidth)
     {
         // each scan line must be padded up to the nearest 4-byte boundary
-        // colours are written as BGR rather than RGB
 
         // top to bottom
         for (int j = 0; j < totalImageHeight; ++j)
@@ -211,6 +210,8 @@ namespace Bitmap
 
     void ImageFile::writeColour(FILE& file, Colour const& colour)
     {
+        // colours are written as BGR rather than RGB
+
         fwrite(&colour.blue, sizeof(ColourChannel), 1, &file);
         fwrite(&colour.green, sizeof(ColourChannel), 1, &file);
         fwrite(&colour.red, sizeof(ColourChannel), 1, &file);
