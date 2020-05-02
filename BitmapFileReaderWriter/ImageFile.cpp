@@ -18,7 +18,7 @@ namespace Bitmap
     {
     }
 
-    void ImageFile::write(char const* const filename, ImageCanvas const& canvas)
+    FileHandlingErrors ImageFile::write(char const* const filename, ImageCanvas const& canvas)
     {
         // written using:
         // https://itnext.io/bits-to-bitmaps-a-simple-walkthrough-of-bmp-image-format-765dc6857393
@@ -27,14 +27,11 @@ namespace Bitmap
         // http://www.ece.ualberta.ca/~elliott/ee552/studentAppNotes/2003_w/misc/bmp_file_format/bmp_file_format.htm
         // accessed 30/April/2020 at 23:41
 
-        FILE* file = nullptr;
+        FileHandlingErrors toReturn = FileHandlingErrors::OK;
 
-        // MUST OPEN THE FILE IN BINARY MODE!!! IF WE DONE AND WE EVER WRITE A '\n' CHARACTER, IT WILL NORMALISE THE LINE ENDING WITH A CARRAIGE RETURN TOO - WRITING 2 BYTES, RATHER THAN 1
-        // As we're writing individual bytes for the colours, if any of then are 10u (the '\n' character), an extra character will be added. Also - the return value doesn't return that 2 characters
-        // were written either!!! It returns 1. You can only find this using ftell, to check the file position for instances where it skips forward too many bytes on a write.
-        errno_t errNum = fopen_s(&file, filename, "wb");
+        FILE* file = openFileStream(filename, FileMode::Write);
 
-        if (file && errNum == 0)
+        if (file)
         {
             int const canvasWidth = canvas.getWidth();
             int const canvasHeight = canvas.getHeight();
@@ -43,13 +40,13 @@ namespace Bitmap
             // File header
             //////////////////////////////////////////////////////////////////////////
 
-            writeFileHeader(*file, canvasWidth, canvasHeight);
+            toReturn = writeFileHeader(*file, canvasWidth, canvasHeight);
 
             //////////////////////////////////////////////////////////////////////////
             // Info Header - typeof(BITMAPINFOHEADER)
             //////////////////////////////////////////////////////////////////////////
 
-            writeInfoHeader(*file, canvasWidth, canvasHeight);
+            if (toReturn == FileHandlingErrors::OK) { toReturn = writeInfoHeader(*file, canvasWidth, canvasHeight); }
 
             //////////////////////////////////////////////////////////////////////////
             // Colour table
@@ -62,10 +59,12 @@ namespace Bitmap
             // Pixel data
             //////////////////////////////////////////////////////////////////////////
 
-            writeCanvasColourData(*file, canvas);
+            if (toReturn == FileHandlingErrors::OK) { toReturn = writeCanvasColourData(*file, canvas); }
 
-            fclose(file);
+            closeFileStream(*file);
         }
+
+        return toReturn;
     }
 
     FileHandlingErrors ImageFile::load(char const* const filename, ImageCanvas& canvas)
@@ -79,11 +78,9 @@ namespace Bitmap
 
         FileHandlingErrors toReturn = FileHandlingErrors::OK;
 
-        FILE* file = nullptr;
+        FILE* file = openFileStream(filename, FileMode::Read);
 
-        errno_t errNum = fopen_s(&file, filename, "rb");
-
-        if (file && errNum == 0)
+        if (file)
         {
             //////////////////////////////////////////////////////////////////////////
             // File header
@@ -117,7 +114,7 @@ namespace Bitmap
                 toReturn = loadCanvasColourData(*file, canvas);
             }
 
-            fclose(file);
+            closeFileStream(*file);
         }
 
         return toReturn;
@@ -352,6 +349,42 @@ namespace Bitmap
         if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned int>(file, offsetToBitmapData); }
 
         return toReturn;
+    }
+
+    FILE* ImageFile::openFileStream(char const* const filename, FileMode fileMode)
+    {
+        FILE* file = nullptr;
+
+        char const* fileStreamModeString = "wb";
+
+        switch (fileMode)
+        {
+        case Bitmap::ImageFile::FileMode::Read:
+            fileStreamModeString = "rb";
+            break;
+        case Bitmap::ImageFile::FileMode::Write:
+
+            // MUST OPEN THE FILE IN BINARY MODE!!! IF WE DONE AND WE EVER WRITE A '\n' CHARACTER, IT WILL NORMALISE THE LINE ENDING WITH A CARRAIGE RETURN TOO - WRITING 2 BYTES, RATHER THAN 1
+            // As we're writing individual bytes for the colours, if any of then are 10u (the '\n' character), an extra character will be added. Also - the return value doesn't return that 2 characters
+            // were written either!!! It returns 1. You can only find this using ftell, to check the file position for instances where it skips forward too many bytes on a write.
+            fileStreamModeString = "wb";
+            break;
+        }
+
+        errno_t errNum = fopen_s(&file, filename, fileStreamModeString);
+
+        if (errNum != 0 && file != nullptr)
+        {
+            closeFileStream(*file);
+            file = nullptr;
+        }
+
+        return file;
+    }
+
+    void ImageFile::closeFileStream(FILE& file)
+    {
+        fclose(&file);
     }
 
     int ImageFile::calculateNumberOfScanlinePaddingBytes(int totalImageWidth) const

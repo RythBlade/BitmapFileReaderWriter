@@ -54,7 +54,7 @@ namespace Bitmap
     public:
         ImageFile();
 
-        void write(char const* const filename, ImageCanvas const& canvas);
+        FileHandlingErrors write(char const* const filename, ImageCanvas const& canvas);
         FileHandlingErrors load(char const* const filename, ImageCanvas& canvas);
 
     private:
@@ -67,6 +67,15 @@ namespace Bitmap
         FileHandlingErrors loadInfoHeader(FILE& file, FileInfoHeader& infoHeader);
         FileHandlingErrors loadCanvasColourData(FILE& file, ImageCanvas& canvas);
         FileHandlingErrors loadColour(FILE& file, Colour& colour);
+
+        enum class FileMode
+        {
+            Read
+            , Write
+        };
+
+        FILE* openFileStream(char const* const filename, FileMode fileMode);
+        void closeFileStream(FILE& file);
 
         int calculateNumberOfScanlinePaddingBytes(int totalImageWidth) const;
 
