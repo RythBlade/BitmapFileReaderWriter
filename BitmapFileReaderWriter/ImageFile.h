@@ -114,7 +114,7 @@ namespace Bitmap
 
     private:
         static int const c_fileTypeSize;
-        static int const c_imageInfoSize;
+        static unsigned int const c_imageInfoSize;
         static char const c_bitmapFormatSpecifier[];
         static unsigned short c_numberOfPlanes;
         static unsigned short const c_bitsPerPixel;

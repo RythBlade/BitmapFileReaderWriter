@@ -8,8 +8,8 @@
 namespace Bitmap
 {
     int const ImageFile::c_fileTypeSize = 14;
-    int const ImageFile::c_imageInfoSize = 40;
-    char const ImageFile::c_bitmapFormatSpecifier[] = { 'B', 'M' };
+    unsigned int const ImageFile::c_imageInfoSize = 40;
+    char const ImageFile::c_bitmapFormatSpecifier[] = { 0x42/*'B'*/, 0x4D/*'M'*/ };
     unsigned short ImageFile::c_numberOfPlanes = 1;
     unsigned short const ImageFile::c_bitsPerPixel = 24;
     unsigned int const ImageFile::c_compressionLevel = 0;
@@ -288,8 +288,7 @@ namespace Bitmap
         FileHandlingErrors toReturn = FileHandlingErrors::OK;
 
         // 4 bytes size of info header
-        unsigned int infoHeaderSize = 40;
-        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned int>(file, infoHeaderSize); }
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned int>(file, c_imageInfoSize); }
 
         // 4 bytes for pixel width (horizontal) of the image
         unsigned int imagePixelWidth = totalImageWidth;
@@ -300,16 +299,13 @@ namespace Bitmap
         if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned int>(file, imagePixelHeight); }
 
         // 2 bytes for the number of planes?
-        unsigned short numPlanes = 1;
-        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned short>(file, numPlanes); }
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned short>(file, c_numberOfPlanes); }
 
         // 2 bytess for the byte size of each pixel
-        unsigned short bitsPerPixel = 24; // 24-bit colour palette so we can skip the colour palette bit
-        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned short>(file, bitsPerPixel); }
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned short>(file, c_bitsPerPixel); } // 24-bit colour palette so we can skip the colour palette bit
 
         // 4 bytes for the level of compression
-        unsigned int compression = 0; // 0 - BI_RGB (no compression) (other compression modes are simple Run Length compression)
-        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned int>(file, compression); }
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned int>(file, c_compressionLevel); }// 0 - BI_RGB (no compression) (other compression modes are simple Run Length compression)
 
         // 4 bytes to specify the size of the compressed image
         unsigned int compressedImageSize = 0; // 0 as we're not using image compression
