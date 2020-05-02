@@ -12,24 +12,60 @@ namespace Bitmap
 
 namespace Bitmap
 {
+    enum class FileHandlingErrors
+    {
+        OK = 0
+        , FileCorrupt
+        , UnexpectedEndOfFile
+        , FileTypeUnknown
+        , Not24BitColourBitmap
+        , CompressionNotSupported
+        , PalettisedBitmapNotSupported
+        , UnknownReadError
+    };
+
+    struct FileTypeHeader
+    {
+        FileTypeHeader()
+            : fileSize(0)
+            , offsetToBitmapData(0)
+        {
+        }
+
+        unsigned int fileSize;
+        unsigned int offsetToBitmapData;
+    };
+
+    struct FileInfoHeader
+    {
+        FileInfoHeader()
+            : imageWidth(0)
+            , imageHeight(0)
+        {
+        }
+
+        unsigned int imageWidth;
+        unsigned int imageHeight;
+    };
+
     class ImageFile
     {
     public:
         ImageFile();
 
-        void write(char const* const filaname, int totalImageWidth, int totalImageHeight);
-        void writeTestBitmap(char const* const filaname, int totalImageWidth, int totalImageHeight);
-
         void write(char const* const filename, ImageCanvas const& canvas);
+        FileHandlingErrors load(char const* const filename, ImageCanvas& canvas);
 
     private:
-        void writeInfoHeader(FILE& file, int totalImageWidth, int totalImageHeight);
         void writeFileHeader(FILE& file, int totalImageWidth, int totalImageHeight);
-        void writeTestColourData(FILE& file, int totalImageWidth, int totalImageHeight);
-
+        void writeInfoHeader(FILE& file, int totalImageWidth, int totalImageHeight);
         void writeCanvasColourData(FILE& file, ImageCanvas const& canvas);
-
         void writeColour(FILE& file, Colour const& colour);
+
+        FileHandlingErrors loadFileHeader(FILE& file, FileTypeHeader& typeHeader);
+        FileHandlingErrors loadInfoHeader(FILE& file, FileInfoHeader& infoHeader);
+        FileHandlingErrors loadCanvasColourData(FILE& file, ImageCanvas& canvas);
+        FileHandlingErrors loadColour(FILE& file, Colour& colour);
 
         int calculateNumberOfScanlinePaddingBytes(int totalImageWidth) const;
 
@@ -37,9 +73,34 @@ namespace Bitmap
 
         int calculateOffsetIntoFileForStartOfPixelData();
 
+        template<typename TYPE>
+        FileHandlingErrors readValue(FILE& file, TYPE& value)
+        {
+            size_t elementsRead = fread(&value, sizeof(TYPE), 1, &file);
+
+            int error = ferror(&file);
+
+            FileHandlingErrors toReturn = FileHandlingErrors::OK;
+
+            if (error == 0)
+            {
+                toReturn = (elementsRead == 1) ? FileHandlingErrors::OK : FileHandlingErrors::UnexpectedEndOfFile;
+            }
+            else
+            {
+                toReturn = FileHandlingErrors::UnknownReadError;
+            }
+
+            return toReturn;
+        }
+
     private:
         static int const c_fileTypeSize;
         static int const c_imageInfoSize;
+        static char const c_bitmapFormatSpecifier[];
+        static unsigned short c_numberOfPlanes;
+        static unsigned short const c_bitsPerPixel;
+        static unsigned int const c_compressionLevel;
     };
 }
 

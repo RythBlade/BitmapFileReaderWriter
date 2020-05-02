@@ -12,15 +12,17 @@ namespace Bitmap
         resize(width, height);
     }
 
+    ImageCanvas::~ImageCanvas()
+    {
+        deleteColourData();
+    }
+
     void ImageCanvas::resize(unsigned int width, unsigned int height)
     {
         m_canvasWidth = width;
         m_canvasHeight = height;
 
-        if (m_colourData)
-        {
-            delete[] m_colourData;
-        }
+        deleteColourData();
 
         m_colourData = new Colour[m_canvasWidth * m_canvasHeight];
     }
@@ -35,6 +37,18 @@ namespace Bitmap
         }
 
         return m_colourData[pixelIndex];
+    }
+
+    void ImageCanvas::setPixel(unsigned int x, unsigned int y, Colour const& colour) const
+    {
+        unsigned int pixelIndex = 0;
+
+        if (x < m_canvasWidth && y < m_canvasHeight)
+        {
+            pixelIndex = y * m_canvasWidth + x;
+        }
+
+        m_colourData[pixelIndex] = colour;
     }
 
     void ImageCanvas::setCanvasToTestImage()
@@ -127,6 +141,15 @@ namespace Bitmap
 
                 ++nextPixelIndex;
             }
+        }
+    }
+
+    void ImageCanvas::deleteColourData()
+    {
+        if (m_colourData)
+        {
+            delete[] m_colourData;
+            m_colourData = nullptr;
         }
     }
 

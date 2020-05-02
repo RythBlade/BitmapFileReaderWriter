@@ -13,6 +13,7 @@ namespace Bitmap
     {
     public:
         ImageCanvas(unsigned int width, unsigned int height);
+        ~ImageCanvas();
 
         void resize(unsigned int width, unsigned int height);
 
@@ -22,8 +23,12 @@ namespace Bitmap
         inline Colour const* getColourData() const { return m_colourData; }
 
         Colour const& getPixel(unsigned int x, unsigned int y) const;
+        void setPixel(unsigned int x, unsigned int y, Colour const& colour) const;
 
         void setCanvasToTestImage();
+
+    private:
+        void deleteColourData();
 
     private:
         unsigned int m_canvasWidth;
