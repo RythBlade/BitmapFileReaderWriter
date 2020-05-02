@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "Colour.h"
+#include "ImageCanvas.h"
 
 namespace Bitmap
 {
@@ -55,7 +56,59 @@ namespace Bitmap
             // Pixel data
             //////////////////////////////////////////////////////////////////////////
 
-            writeTestColourData(*file, totalImageHeight, totalImageWidth);
+            writeTestColourData(*file, totalImageWidth, totalImageHeight);
+
+            fclose(file);
+        }
+    }
+
+    void ImageFile::write(char const* const filename, ImageCanvas const& canvas)
+    {
+        // written using:
+        // https://itnext.io/bits-to-bitmaps-a-simple-walkthrough-of-bmp-image-format-765dc6857393
+        // accessed 30/April/2020 at 23:41
+        // AND
+        // http://www.ece.ualberta.ca/~elliott/ee552/studentAppNotes/2003_w/misc/bmp_file_format/bmp_file_format.htm
+        // accessed 30/April/2020 at 23:41
+
+        FILE* file = nullptr;
+
+        // MUST OPEN THE FILE IN BINARY MODE!!! IF WE DONE AND WE EVER WRITE A '\n' CHARACTER, IT WILL NORMALISE THE LINE ENDING WITH A CARRAIGE RETURN TOO - WRITING 2 BYTES, RATHER THAN 1
+        // As we're writing individual bytes for the colours, if any of then are 10u (the '\n' character), an extra character will be added. Also - the return value doesn't return that 2 characters
+        // were written either!!! It returns 1. You can only find this using ftell, to check the file position for instances where it skips forward too many bytes on a write.
+        errno_t errNum = fopen_s(&file, filename, "wb");
+
+        if (file && errNum == 0)
+        {
+            int const canvasWidth = canvas.getWidth();
+            int const canvasHeight = canvas.getHeight();
+
+            //////////////////////////////////////////////////////////////////////////
+            // File header
+            //////////////////////////////////////////////////////////////////////////
+
+            writeFileHeader(*file, canvasWidth, canvasHeight);
+
+            //////////////////////////////////////////////////////////////////////////
+            // Info Header - typeof(BITMAPINFOHEADER)
+            //////////////////////////////////////////////////////////////////////////
+
+            writeInfoHeader(*file, canvasWidth, canvasHeight);
+
+            //////////////////////////////////////////////////////////////////////////
+            // Colour table
+            //////////////////////////////////////////////////////////////////////////
+
+            // skip the colour table - we only do 256-bit colours which don't need the colour table
+            // you only need the colour table for pictures with bitsPerPixel <= 8;
+
+            //////////////////////////////////////////////////////////////////////////
+            // Pixel data
+            //////////////////////////////////////////////////////////////////////////
+
+            writeCanvasColourData(*file, canvas);
+
+            writeTestColourData(*file, canvasWidth, canvasHeight);
 
             fclose(file);
         }
@@ -102,13 +155,13 @@ namespace Bitmap
             // Pixel data
             //////////////////////////////////////////////////////////////////////////
 
-            writeTestColourData(*file, totalImageHeight, totalImageWidth);
+            writeTestColourData(*file, totalImageWidth, totalImageHeight);
 
             fclose(file);
         }
     }
 
-    void ImageFile::writeTestColourData(FILE& file, int totalImageHeight, int totalImageWidth)
+    void ImageFile::writeTestColourData(FILE& file, int totalImageWidth, int totalImageHeight)
     {
         // each scan line must be padded up to the nearest 4-byte boundary
 
@@ -199,6 +252,33 @@ namespace Bitmap
 
             // zero byte padding up to nearest 4 byte boundary
             int const paddingBytes = calculateNumberOfScanlinePaddingBytes(totalImageWidth);
+
+            for (int i = 0; i < paddingBytes; ++i)
+            {
+                unsigned char zeroByte = 0;
+                fwrite(&zeroByte, sizeof(unsigned char), 1, &file);
+            }
+        }
+    }
+
+    void ImageFile::writeCanvasColourData(FILE& file, ImageCanvas const& canvas)
+    {
+        int const width = canvas.getWidth();
+        int const height = canvas.getHeight();
+
+        // top to bottom
+        for (int j = 0; j < height; ++j)
+        {
+            // left to right
+            for (int i = 0; i < width; ++i)
+            {
+                Colour const colourToWrite = canvas.getPixel(i, j);
+
+                writeColour(file, colourToWrite);
+            }
+
+            // zero byte padding up to nearest 4 byte boundary
+            int const paddingBytes = calculateNumberOfScanlinePaddingBytes(width);
 
             for (int i = 0; i < paddingBytes; ++i)
             {

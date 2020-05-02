@@ -7,6 +7,7 @@
 namespace Bitmap
 {
     struct Colour;
+    class ImageCanvas;
 }
 
 namespace Bitmap
@@ -19,10 +20,14 @@ namespace Bitmap
         void write(char const* const filaname, int totalImageWidth, int totalImageHeight);
         void writeTestBitmap(char const* const filaname, int totalImageWidth, int totalImageHeight);
 
+        void write(char const* const filename, ImageCanvas const& canvas);
+
     private:
         void writeInfoHeader(FILE& file, int totalImageWidth, int totalImageHeight);
         void writeFileHeader(FILE& file, int totalImageWidth, int totalImageHeight);
-        void writeTestColourData(FILE& file, int totalImageHeight, int totalImageWidth);
+        void writeTestColourData(FILE& file, int totalImageWidth, int totalImageHeight);
+
+        void writeCanvasColourData(FILE& file, ImageCanvas const& canvas);
 
         void writeColour(FILE& file, Colour const& colour);
 
