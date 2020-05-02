@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "Bitmap.h"
+#include "ImageFile.h"
 
 int main()
 {
     printf("Hello world!\n");
 
-    Bitmap myBitmap;
+    Bitmap::ImageFile myBitmap;
     myBitmap.writeTestBitmap("test\\test.bmp", 200, 20);
     myBitmap.writeTestBitmap("test\\test1.bmp", 201, 21);
     myBitmap.writeTestBitmap("test\\test2.bmp", 800, 800);
