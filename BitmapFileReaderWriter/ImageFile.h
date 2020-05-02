@@ -22,6 +22,7 @@ namespace Bitmap
         , CompressionNotSupported
         , PalettisedBitmapNotSupported
         , UnknownReadError
+        , UnknownWriteError
     };
 
     struct FileTypeHeader
@@ -57,10 +58,10 @@ namespace Bitmap
         FileHandlingErrors load(char const* const filename, ImageCanvas& canvas);
 
     private:
-        void writeFileHeader(FILE& file, int totalImageWidth, int totalImageHeight);
-        void writeInfoHeader(FILE& file, int totalImageWidth, int totalImageHeight);
-        void writeCanvasColourData(FILE& file, ImageCanvas const& canvas);
-        void writeColour(FILE& file, Colour const& colour);
+        FileHandlingErrors writeFileHeader(FILE& file, int totalImageWidth, int totalImageHeight);
+        FileHandlingErrors writeInfoHeader(FILE& file, int totalImageWidth, int totalImageHeight);
+        FileHandlingErrors writeCanvasColourData(FILE& file, ImageCanvas const& canvas);
+        FileHandlingErrors writeColour(FILE& file, Colour const& colour);
 
         FileHandlingErrors loadFileHeader(FILE& file, FileTypeHeader& typeHeader);
         FileHandlingErrors loadInfoHeader(FILE& file, FileInfoHeader& infoHeader);
@@ -89,6 +90,23 @@ namespace Bitmap
             else
             {
                 toReturn = FileHandlingErrors::UnknownReadError;
+            }
+
+            return toReturn;
+        }
+
+        template<typename TYPE>
+        FileHandlingErrors writeValue(FILE& file, TYPE const& value)
+        {
+            size_t elementswritted = fwrite(&value, sizeof(TYPE), 1, &file);
+
+            int error = ferror(&file);
+
+            FileHandlingErrors toReturn = FileHandlingErrors::OK;
+
+            if (error != 0 || elementswritted != 1)
+            {
+                toReturn = FileHandlingErrors::UnknownWriteError;
             }
 
             return toReturn;

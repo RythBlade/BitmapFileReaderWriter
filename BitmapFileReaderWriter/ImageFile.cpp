@@ -240,8 +240,10 @@ namespace Bitmap
         return toReturn;
     }
 
-    void ImageFile::writeCanvasColourData(FILE& file, ImageCanvas const& canvas)
+    FileHandlingErrors ImageFile::writeCanvasColourData(FILE& file, ImageCanvas const& canvas)
     {
+        FileHandlingErrors toReturn = FileHandlingErrors::OK;
+
         int const width = canvas.getWidth();
         int const height = canvas.getHeight();
 
@@ -249,98 +251,111 @@ namespace Bitmap
         int const paddingBytes = calculateNumberOfScanlinePaddingBytes(width);
 
         // top to bottom
-        for (int j = 0; j < height; ++j)
+        for (int j = 0; j < height && toReturn == FileHandlingErrors::OK; ++j)
         {
             // left to right
-            for (int i = 0; i < width; ++i)
+            for (int i = 0; i < width && toReturn == FileHandlingErrors::OK; ++i)
             {
                 Colour const colourToWrite = canvas.getPixel(i, j);
 
-                writeColour(file, colourToWrite);
+                toReturn = writeColour(file, colourToWrite);
             }
 
             // write padding bytes
-            for (int i = 0; i < paddingBytes; ++i)
+            for (int i = 0; i < paddingBytes && toReturn == FileHandlingErrors::OK; ++i)
             {
                 unsigned char zeroByte = 0;
-                fwrite(&zeroByte, sizeof(unsigned char), 1, &file);
+                toReturn = writeValue(file, zeroByte);
             }
         }
+
+        return toReturn;
     }
 
-    void ImageFile::writeColour(FILE& file, Colour const& colour)
+    FileHandlingErrors ImageFile::writeColour(FILE& file, Colour const& colour)
     {
         // colours are written as BGR rather than RGB
 
-        fwrite(&colour.blue, sizeof(ColourChannel), 1, &file);
-        fwrite(&colour.green, sizeof(ColourChannel), 1, &file);
-        fwrite(&colour.red, sizeof(ColourChannel), 1, &file);
+        FileHandlingErrors toReturn = writeValue<ColourChannel>(file, colour.blue);
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<ColourChannel>(file, colour.green); }
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<ColourChannel>(file, colour.red); }
+
+        return toReturn;
     }
 
-    void ImageFile::writeInfoHeader(FILE& file, int totalImageWidth, int totalImageHeight)
+    FileHandlingErrors ImageFile::writeInfoHeader(FILE& file, int totalImageWidth, int totalImageHeight)
     {
+        FileHandlingErrors toReturn = FileHandlingErrors::OK;
+
         // 4 bytes size of info header
         unsigned int infoHeaderSize = 40;
-        fwrite(&infoHeaderSize, sizeof(unsigned int), 1, &file);
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned int>(file, infoHeaderSize); }
 
         // 4 bytes for pixel width (horizontal) of the image
         unsigned int imagePixelWidth = totalImageWidth;
-        fwrite(&imagePixelWidth, sizeof(unsigned int), 1, &file);
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned int>(file, imagePixelWidth); }
 
         // 4 bytes for pixel height (vertical) of the image
         unsigned int imagePixelHeight = totalImageHeight;
-        fwrite(&imagePixelHeight, sizeof(unsigned int), 1, &file);
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned int>(file, imagePixelHeight); }
 
         // 2 bytes for the number of planes?
         unsigned short numPlanes = 1;
-        fwrite(&numPlanes, sizeof(unsigned short), 1, &file);
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned short>(file, numPlanes); }
 
         // 2 bytess for the byte size of each pixel
         unsigned short bitsPerPixel = 24; // 24-bit colour palette so we can skip the colour palette bit
-        fwrite(&bitsPerPixel, sizeof(unsigned short), 1, &file);
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned short>(file, bitsPerPixel); }
 
         // 4 bytes for the level of compression
         unsigned int compression = 0; // 0 - BI_RGB (no compression) (other compression modes are simple Run Length compression)
-        fwrite(&compression, sizeof(unsigned int), 1, &file);
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned int>(file, compression); }
 
         // 4 bytes to specify the size of the compressed image
         unsigned int compressedImageSize = 0; // 0 as we're not using image compression
-        fwrite(&compressedImageSize, sizeof(unsigned int), 1, &file);
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned int>(file, compressedImageSize); }
 
         // 4 bytes - representing the horizontal resolution of the target device. This parameter will be adjusted by the image 
         // processing application but should be set to '0' in decimal to indicate no preference
         int xPixelsPerM = 0;
-        fwrite(&xPixelsPerM, sizeof(int), 1, &file);
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<int>(file, xPixelsPerM); }
 
         // 4 bytes - representing the verical resolution of the target device (same as the above for horizontal)
         int yPixelsPerM = 0;
-        fwrite(&yPixelsPerM, sizeof(int), 1, &file);
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<int>(file, yPixelsPerM); }
 
         // 4 bytes - number of colours used. Set to zero so it uses 2^bitsPerPixel
         unsigned int coloursUsed = 0;
-        fwrite(&coloursUsed, sizeof(unsigned int), 1, &file);
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned int>(file, coloursUsed); }
 
         // 4 bytes for number of colours. We can ignore this and set it to zero
         unsigned int importantColours = 0;
-        fwrite(&importantColours, sizeof(unsigned int), 1, &file);
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned int>(file, importantColours); }
+
+        return toReturn;
     }
 
-    void ImageFile::writeFileHeader(FILE& file, int totalImageWidth, int totalImageHeight)
+    FileHandlingErrors ImageFile::writeFileHeader(FILE& file, int totalImageWidth, int totalImageHeight)
     {
+        FileHandlingErrors toReturn = FileHandlingErrors::OK;
+
         // 2 bytes
-        fwrite(c_bitmapFormatSpecifier, sizeof(char), 2, &file);
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<char>(file, c_bitmapFormatSpecifier[0]); }
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<char>(file, c_bitmapFormatSpecifier[1]); }
 
         // 4 bytes
         unsigned int fileSize = calculateTotalFileSize(totalImageWidth, totalImageHeight);
-        fwrite(&fileSize, sizeof(unsigned int), 1, &file);
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned int>(file, fileSize); }
 
         // 4 bytes - reserved to be utilised by an image processing application. Initialise to zero,
         unsigned int unused = 0;
-        fwrite(&unused, sizeof(unsigned int), 1, &file);
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned int>(file, unused); }
 
         // 4 bytes to point to the start of the bit map data
         unsigned int offsetToBitmapData = calculateOffsetIntoFileForStartOfPixelData();
-        fwrite(&offsetToBitmapData, sizeof(unsigned int), 1, &file);
+        if (toReturn == FileHandlingErrors::OK) { toReturn = writeValue<unsigned int>(file, offsetToBitmapData); }
+
+        return toReturn;
     }
 
     int ImageFile::calculateNumberOfScanlinePaddingBytes(int totalImageWidth) const
