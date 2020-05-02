@@ -31,5 +31,14 @@
     <ClInclude Include="ImageCanvas.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="FileHandlingErrors.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FileTypeHeader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FileInfoHeader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

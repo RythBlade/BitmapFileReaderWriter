@@ -4,6 +4,8 @@
 
 #include "Colour.h"
 #include "ImageCanvas.h"
+#include "FileInfoHeader.h"
+#include "FileTypeHeader.h"
 
 namespace Bitmap
 {

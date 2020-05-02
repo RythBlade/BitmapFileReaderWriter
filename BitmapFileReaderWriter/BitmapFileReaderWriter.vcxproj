@@ -144,6 +144,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Colour.h" />
+    <ClInclude Include="FileHandlingErrors.h" />
+    <ClInclude Include="FileInfoHeader.h" />
+    <ClInclude Include="FileTypeHeader.h" />
     <ClInclude Include="ImageCanvas.h" />
     <ClInclude Include="ImageFile.h" />
   </ItemGroup>

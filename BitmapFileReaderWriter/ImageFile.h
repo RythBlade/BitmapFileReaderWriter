@@ -2,53 +2,19 @@
 #define BITMAP_H
 
 #include <stdio.h>
+#include "FileHandlingErrors.h"
 
 // forward declarations
 namespace Bitmap
 {
     struct Colour;
+    struct FileInfoHeader;
+    struct FileTypeHeader;
     class ImageCanvas;
 }
 
 namespace Bitmap
 {
-    enum class FileHandlingErrors
-    {
-        OK = 0
-        , FileCorrupt
-        , UnexpectedEndOfFile
-        , FileTypeUnknown
-        , Not24BitColourBitmap
-        , CompressionNotSupported
-        , PalettisedBitmapNotSupported
-        , UnknownReadError
-        , UnknownWriteError
-    };
-
-    struct FileTypeHeader
-    {
-        FileTypeHeader()
-            : fileSize(0)
-            , offsetToBitmapData(0)
-        {
-        }
-
-        unsigned int fileSize;
-        unsigned int offsetToBitmapData;
-    };
-
-    struct FileInfoHeader
-    {
-        FileInfoHeader()
-            : imageWidth(0)
-            , imageHeight(0)
-        {
-        }
-
-        unsigned int imageWidth;
-        unsigned int imageHeight;
-    };
-
     class ImageFile
     {
     public:
