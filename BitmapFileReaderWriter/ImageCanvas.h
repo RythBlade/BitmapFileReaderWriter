@@ -20,7 +20,7 @@ namespace Bitmap
         inline unsigned int getWidth() const { return m_canvasWidth; }
         inline unsigned int getHeight() const { return m_canvasHeight; }
 
-        inline Colour const* getColourData() const { return m_colourData; }
+        inline Colour const* getRawColourData() const { return m_colourData; }
 
         Colour const& getPixel(unsigned int x, unsigned int y) const;
         void setPixel(unsigned int x, unsigned int y, Colour const& colour) const;

@@ -29,11 +29,17 @@ namespace Bitmap
 
     Bitmap::Colour const& ImageCanvas::getPixel(unsigned int x, unsigned int y) const
     {
+        // origin of the image is the top left corner
+        // right == m_canvasWidth
+        // left == 0
+        // top == m_canvasHeight == y=0
+        // bottom == 0
+
         unsigned int pixelIndex = 0;
 
         if (x < m_canvasWidth && y < m_canvasHeight)
         {
-            pixelIndex = y * m_canvasWidth + x;
+            pixelIndex = (m_canvasHeight - y) * m_canvasWidth + x;
         }
 
         return m_colourData[pixelIndex];

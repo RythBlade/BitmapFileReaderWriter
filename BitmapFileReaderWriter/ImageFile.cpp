@@ -249,13 +249,18 @@ namespace Bitmap
         // zero byte padding up to nearest 4 byte boundary
         int const paddingBytes = calculateNumberOfScanlinePaddingBytes(width);
 
+        Colour const* rawBuffer = canvas.getRawColourData();
+
         // top to bottom
         for (int j = 0; j < height && toReturn == FileHandlingErrors::OK; ++j)
         {
             // left to right
             for (int i = 0; i < width && toReturn == FileHandlingErrors::OK; ++i)
             {
-                Colour const colourToWrite = canvas.getPixel(i, j);
+                // pixel layout is different for file writing compared to indexing into it using an xy coordinate. This is file handling specific indexing so we can insert the padding in the right place
+                unsigned int const pixelIndex = j * width + i;
+
+                Colour const colourToWrite = rawBuffer[pixelIndex];
 
                 toReturn = writeColour(file, colourToWrite);
             }
