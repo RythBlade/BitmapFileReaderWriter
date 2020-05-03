@@ -56,10 +56,10 @@ namespace Bitmap
         int nextPixelIndex = 0;
 
         // top to bottom
-        for (int j = 0; j < m_canvasHeight; ++j)
+        for (unsigned int j = 0; j < m_canvasHeight; ++j)
         {
             // left to right
-            for (int i = 0; i < m_canvasWidth; ++i)
+            for (unsigned int i = 0; i < m_canvasWidth; ++i)
             {
                 float const horizontalRatio = static_cast<float>(i) / m_canvasWidth;
                 float const verticalRatio = static_cast<float>(j) / m_canvasHeight;
