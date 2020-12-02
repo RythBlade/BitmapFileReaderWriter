@@ -39,7 +39,7 @@ namespace Bitmap
 
         if (x < m_canvasWidth && y < m_canvasHeight)
         {
-            pixelIndex = (m_canvasHeight - y) * m_canvasWidth + x;
+            pixelIndex = y * m_canvasWidth + x;
         }
 
         return m_colourData[pixelIndex];
